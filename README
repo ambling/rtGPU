@@ -1,0 +1,4 @@
+rtGPU is a GPU-based ray tracer written by Ambling.
+The source code is written referring to the code of SmallLuxGPU which is the part of LuxRays(http://www.luxrender.net/)
+
+Any problem please contact ambling07@gmail.com
