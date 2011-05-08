@@ -1,0 +1,5 @@
+<background name="world_background">
+	<color r="1" g="1" b="1" a="1"/>
+	<power fval="1"/>
+	<type sval="constant"/>
+</background>

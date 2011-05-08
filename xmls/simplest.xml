@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<scene type="triangle">
+
+<material name="defaultMat">
+	<type sval="shinydiffusemat"/>
+</material>
+
+<material name="Material">
+	<IOR fval="1"/>
+	<color r="0" g="0" b="0" a="1"/>
+	<diffuse_reflect fval="1"/>
+	<emit fval="0"/>
+	<fresnel_effect bval="false"/>
+	<mirror_color r="1" g="1" b="1" a="1"/>
+	<specular_reflect fval="0"/>
+	<translucency fval="0"/>
+	<transmit_filter fval="1"/>
+	<transparency fval="0"/>
+	<type sval="shinydiffusemat"/>
+</material>
+
+<light name="Lamp">
+	<color r="1" g="1" b="1" a="1"/>
+	<from x="4.07625" y="1.00545" z="5.90386"/>
+	<power fval="0.5"/>
+	<type sval="pointlight"/>
+</light>
+
+<camera name="cam">
+	<aperture fval="0"/>
+	<bokeh_rotation fval="0"/>
+	<bokeh_type sval="disk1"/>
+	<dof_distance fval="0"/>
+	<focal fval="1.09375"/>
+	<from x="7.48113" y="-6.50764" z="5.34367"/>
+	<resx ival="800"/>
+	<resy ival="600"/>
+	<to x="6.82627" y="-5.89697" z="4.89842"/>
+	<type sval="perspective"/>
+	<up x="7.16376" y="-6.19517" z="6.23901"/>
+</camera>
+
+<mesh vertices="8" faces="6" has_orco="true" has_uv="false" type="0">
+			<p x="1" y="1" z="-1" ox="1" oy="1" oz="-1"/>
+			<p x="1" y="-1" z="-1" ox="1" oy="-0.999999" oz="-1"/>
+			<p x="-1" y="-1" z="-1" ox="-1" oy="-0.999999" oz="-1"/>
+			<p x="-1" y="1" z="-1" ox="-0.999999" oy="1" oz="-1"/>
+			<p x="1" y="0.999999" z="1" ox="1" oy="0.999999" oz="1"/>
+			<p x="0.999999" y="-1" z="1" ox="0.999999" oy="-1" oz="1"/>
+			<p x="-1" y="-1" z="1" ox="-1" oy="-0.999999" oz="1"/>
+			<p x="-1" y="1" z="1" ox="-1" oy="1" oz="1"/>
+			<set_material sval="Material"/>
+			<f a="0" b="1" c="2"/>
+			<f a="2" b="3" c="0"/>
+			<f a="4" b="7" c="6"/>
+			<f a="6" b="5" c="4"/>
+			<f a="0" b="4" c="5"/>
+			<f a="5" b="1" c="0"/>
+			<f a="1" b="5" c="6"/>
+			<f a="6" b="2" c="1"/>
+			<f a="2" b="6" c="7"/>
+			<f a="7" b="3" c="2"/>
+			<f a="4" b="0" c="3"/>
+			<f a="3" b="7" c="4"/>
+</mesh>
+
+<background name="world_background">
+	<color r="1" g="1" b="1" a="1"/>
+	<power fval="1"/>
+	<type sval="constant"/>
+</background>
+
+<integrator name="default">
+	<caustics bval="false"/>
+	<raydepth ival="2"/>
+	<shadowDepth ival="2"/>
+	<transpShad bval="false"/>
+	<type sval="directlighting"/>
+</integrator>
+
+<integrator name="volintegr">
+	<type sval="none"/>
+</integrator>
+
+<render>
+	<AA_inc_samples ival="1"/>
+	<AA_minsamples ival="1"/>
+	<AA_passes ival="1"/>
+	<AA_pixelwidth fval="1.5"/>
+	<AA_threshold fval="0.05"/>
+	<background_name sval="world_background"/>
+	<camera_name sval="cam"/>
+	<clamp_rgb bval="false"/>
+	<filter_type sval="box"/>
+	<gamma fval="1.8"/>
+	<height ival="600"/>
+	<integrator_name sval="default"/>
+	<threads ival="1"/>
+	<volintegrator_name sval="volintegr"/>
+	<width ival="800"/>
+	<xstart ival="0"/>
+	<ystart ival="0"/>
+	<z_channel bval="true"/>
+</render>
+</scene>
