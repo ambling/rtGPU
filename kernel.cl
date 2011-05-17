@@ -18,6 +18,8 @@ __kernel void test(const int width, const int sphereNum, const int vertexNum,
     int h = index / width;
     Color color;
     
+    vInit(color, 0, 0, 0);  
+    
     Ray ray= rayGenerate(*camera, w, h);
 	rayCasting(ray, sphereNum, vertexNum, 
 					materialNum, meshNum, spheres, vertices, 

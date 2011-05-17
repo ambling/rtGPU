@@ -154,6 +154,11 @@ void cpuMain(int width, int height)
 	
 	readScene();
 	
+	for(int i = 0; i < meshNum; i++)
+	{
+		printf("%d: %d %d %d\n", i, meshes[i].a, meshes[i].b, meshes[i].c);
+	}
+	
 	output = new Color[size];
 	for(int index = 0; index <= size; index++)
 	{

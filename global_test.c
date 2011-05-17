@@ -105,7 +105,7 @@ __global
 		if(dis > EPSILON && dis < distance)
 		{//is shadow
 			isshadow = 1;
-			break;
+			return isshadow;
 		}
 	}
 	///*
@@ -118,7 +118,7 @@ __global
 		if(dis > EPSILON && dis < distance)
 		{//is shadow
 			isshadow = 1;
-			break;
+			return isshadow;
 		}
 	}
 	//*/
@@ -179,7 +179,8 @@ __global
 				float d = vDot(norm, light);		//d = L x N
 				if(d > EPSILON) continue;
 		
-				if(isShadow(i, obSphere, -1, distance, sphereNum, vertexNum, meshNum, pos, light, spheres, vertices, meshes)) continue;
+				if(isShadow(i, obSphere, -1, distance, sphereNum, vertexNum, meshNum, 
+					pos, light, spheres, vertices, meshes) == 1) continue;
 		
 				vec3f addcolor;
 				vMul(addcolor, spheres[obSphere].color, (-1 * d));
@@ -328,7 +329,7 @@ __global
 									vertices[meshes[i].b],
 									vertices[meshes[i].c]);
 		#ifndef GPU_KERNEL
-		printf("%.2f\n", hitIndex);
+		//printf("hit mesh: %d\n", meshNum);
 		#endif
 		if(hitIndex > 0) 
 		{	
@@ -354,10 +355,24 @@ __global
 		#ifndef GPU_KERNEL
 		printf("hit mesh: %d\n", minMesh);
 		#endif
-		
-		setColor(ray, minIndex, minSphere, minMesh, sphereNum, vertexNum, 
-						materialNum, meshNum, spheres, vertices, 
-						materials, meshes, color);
+		Color sample[12];
+		vInit(sample[0], 0.1, 0.1 ,0.1);
+		vInit(sample[1], 0, 1 ,0);
+		vInit(sample[2], 0, 0 ,1);
+		vInit(sample[3], 1, 0 ,0);
+		vInit(sample[4], 0, 1 ,1);
+		vInit(sample[5], 1, 1 ,0);
+		vInit(sample[6], 1, 0 ,1);
+		vInit(sample[7], 0, 0 ,0.5);
+		vInit(sample[8], 0, 0.5 ,0);
+		vInit(sample[9], 0.5, 0 ,0);
+		vInit(sample[10], 0.5, 0.5 ,0);
+		vInit(sample[11], 0, 0.5 ,0.5);
+
+		vAssign((*color), sample[minMesh]);
+		//setColor(ray, minIndex, minSphere, minMesh, sphereNum, vertexNum, 
+		//				materialNum, meshNum, spheres, vertices, 
+		//				materials, meshes, color);
 	}
 	else
 	{//not intersection, set black
