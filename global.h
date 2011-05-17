@@ -51,6 +51,7 @@ typedef struct
 
 // global functions
 
+#define EPSILON 0.0001
 #define vPrint(v) { printf("%.2f %.2f %.2f\n", (v).x, (v).y, (v).z); }
 #define vInit(v, a, b, c) { (v).x = a; (v).y = b; (v).z = c; }
 #define vAssign(a, b) vInit(a, (b).x, (b).y, (b).z)
@@ -61,6 +62,7 @@ typedef struct
 #define vDot(a, b) ((a).x * (b).x + (a).y * (b).y + (a).z * (b).z)
 #define vNorm(v) { float l = 1.f / sqrt(vDot(v, v)); vMul(v, v, l); }
 #define vCross(v, a, b) vInit(v, (a).y * (b).z - (a).z * (b).y, (a).z * (b).x - (a).x * (b).z, (a).x * (b).y - (a).y * (b).x)
+#define det3v(a, b, c) ((a).x*(b).y*(c).z + (b).x*(c).y*(a).z + (c).x*(a).y*(b).z - (c).x*(b).y*(a).z - (a).x*(c).y*(b).z - (b).x*(a).y*(c).z)
 
 #ifndef GPU_KERNEL
 float hitSphere(Ray ray, Sphere sphere);

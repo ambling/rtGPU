@@ -20,8 +20,7 @@ Color* output;
 void readScene(string sceneFile)
 {//get information from scene file
 	sceneFile = "simple.scn";
-	//sceneFile = "scenes/complex.scn";
-	//sceneFile = "scenes/common.scn";
+	//sceneFile = "simplest.scn";
 	std::ifstream in;
 	in.open(sceneFile.c_str());
 	std::string tmp;
@@ -39,12 +38,21 @@ void readScene(string sceneFile)
 			vSub(camera.dirc, camera.targ, camera.orig);	//global function, camera direction
 			vNorm(camera.dirc);
 			
-			vec3f up;
+			vec3f up, distance;
+			float angle = 45;
+			vSub(distance, camera.targ, camera.orig);
+			float dis = sqrt(vDot(distance, distance));
+			float scale = tan(angle / 2.0) * dis * 2.0 / imWidth;
+			printf("distance is %f, scale is %f", dis, scale);
+			
 			up.x = 0.0; up.y = 1.0; up.z = 0.0;
+			//vInit(up, 7.16376, -6.19517, 6.23901);
 			vCross(camera.x, camera.dirc, up);				//global function, x base direction
 			vNorm(camera.x);
-			vCross(camera.y, camera.dirc, camera.x);		//global function, y base direction
+			vMul(camera.x, camera.x, scale);
+			vCross(camera.y, camera.x, camera.dirc);		//global function, y base direction
 			vNorm(camera.y);
+			vMul(camera.y, camera.y, scale);
 			
 			vec3f displace_x, displace_y;					//displacement from the target to base
 			vMul(displace_x, camera.x, 1.0 * imWidth / 2);
@@ -140,6 +148,8 @@ void cpuMain(int width, int height)
 {
 	imWidth = width;
 	imHeight = height;
+	imWidth = 800;
+	imHeight = 600;
 	size = width * height;
 	
 	readScene();

@@ -84,7 +84,7 @@ void CL::loadProgram()
 	}
 	
 	err = clBuildProgram(program, 1, devices, "-I. ", NULL, NULL);	
-	/* for debug
+	///* for debug
 	size_t len;
 	char *buffer;
 	clGetProgramBuildInfo(program, devices[device_used], CL_PROGRAM_BUILD_LOG, 0, NULL, &len);
@@ -210,9 +210,8 @@ void CL::dataPrepare(int w, int h, std::string sceneFile)
 
 void CL::readScene(std::string sceneFile)
 {//get information from scene file
-	sceneFile = "scenes/simple.scn";
-	//sceneFile = "scenes/complex.scn";
-	//sceneFile = "scenes/common.scn";
+	sceneFile = "simple.scn";
+	//sceneFile = "simplest.scn";
 	std::ifstream in;
 	in.open(sceneFile.c_str());
 	std::string tmp;
@@ -230,12 +229,20 @@ void CL::readScene(std::string sceneFile)
 			vSub(camera.dirc, camera.targ, camera.orig);	//global function, camera direction
 			vNorm(camera.dirc);
 			
-			vec3f up;
+			vec3f up, distance;
+			float angle = 45;
+			vSub(distance, camera.targ, camera.orig);
+			float dis = sqrt(vDot(distance, distance));
+			float scale = tan(angle / 2.0) * dis * 2.0 / imWidth;
+			//printf("scale is %.2f", scale);
+			
 			up.x = 0.0; up.y = 1.0; up.z = 0.0;
 			vCross(camera.x, camera.dirc, up);				//global function, x base direction
 			vNorm(camera.x);
-			vCross(camera.y, camera.dirc, camera.x);		//global function, y base direction
+			vMul(camera.x, camera.x, scale);
+			vCross(camera.y, camera.x, camera.dirc);		//global function, y base direction
 			vNorm(camera.y);
+			vMul(camera.y, camera.y, scale);
 			
 			vec3f displace_x, displace_y;					//displacement from the target to base
 			vMul(displace_x, camera.x, 1.0 * imWidth / 2);
@@ -290,7 +297,7 @@ void CL::readScene(std::string sceneFile)
 		else if(tmp == "mesh")
 		{
 			Mesh *m = &meshes[meshCnt];
-			in>>m->a>>m->a>>m->c;
+			in>>m->a>>m->b>>m->c>>m->ma;
 			meshCnt ++;
 		}
 		else if(tmp == "material")
@@ -318,6 +325,7 @@ void CL::readScene(std::string sceneFile)
 void CL::runKernel()
 {
 	size_t size = imWidth * imHeight;
+	
 	err = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, &size, NULL, 0, NULL, &event);
 	if(err != CL_SUCCESS)
 	{
@@ -326,8 +334,13 @@ void CL::runKernel()
 		exit(-1);
 	}
 	clReleaseEvent(event);
-	clFinish(command_queue);
-	
+	err = clFinish(command_queue);
+	if(err != CL_SUCCESS)
+	{
+		printf("clFinish : %s\n", oclErrorString(err));
+		exit(-1);
+	}
+	///*
 	err = clEnqueueReadBuffer(command_queue, outputBuf, CL_TRUE, 0, sizeof(Color) * size, output, 0, NULL, &event);
 	if(err != CL_SUCCESS)
 	{
@@ -336,13 +349,15 @@ void CL::runKernel()
 		exit(-1);
 	}
 	clReleaseEvent(event);
+	clFinish(command_queue);
+	//*/
 	/*
 	for(int i = 0; i < size; i++)
 	{
 		std::cout<<"No.: "<<i<<std::endl;
-		std::cout<<output[i].r<<std::endl;
-		std::cout<<output[i].g<<std::endl;
-		std::cout<<output[i].b<<std::endl;
+		std::cout<<output[i].x<<std::endl;
+		std::cout<<output[i].y<<std::endl;
+		std::cout<<output[i].z<<std::endl;
 	}
 	
 	*/

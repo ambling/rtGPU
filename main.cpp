@@ -15,8 +15,8 @@ int main()
 	//cout<<"please input width and height:"<<endl;
 	//cin>>w;
 	//cin>>h;
-	w = 640;
-	h = 480;
+	w = 800;
+	h = 600;
 
 	//cout<<"Choose device('g' for GPU, 'c' for CPU):";
 	char c = 'c';

@@ -19,7 +19,6 @@ height = int(word[1][:-1])
 
 #print width
 #print height
-
 im = Image.new("RGB", (width, height))
 pix = im.load()
 
@@ -33,3 +32,4 @@ for i in range(width*height):
 	
 im.show()
 im.save("output.png")
+os.system("rm output")

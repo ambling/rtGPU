@@ -23,8 +23,8 @@ __kernel void test(const int width, const int sphereNum, const int vertexNum,
 					materialNum, meshNum, spheres, vertices, 
 					materials, meshes, &color);
 	
-	output[index].r = color.r;
-	output[index].g = color.g;
-	output[index].b = color.b;
+	output[index].x = color.x;
+	output[index].y = color.y;
+	output[index].z = color.z;
 }
 
