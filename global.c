@@ -49,54 +49,6 @@ float hitSphere(Ray ray, Sphere sphere)
 	return (((0.0-b) - sqrt(delta))/2/a); 	//others
 }
 
-
-/*
-Vec3f origin = r.getOrigin();
-	Vec3f direct = r.getDirection();
-	float isParallel = normal.Dot3(direct);
-	Vec3f tempbeta0;
-	Vec3f tempbeta1;
-	Vec3f tempbeta2;
-	float beta0;
-	float beta1;
-	float beta2;
-	if(fabs(isParallel)>0.0f)
-	{
-		float dist = -(normal.Dot3(origin)+d)/isParallel;
-		Vec3f q = origin + direct*dist;
-		Vec3f::Cross3(tempbeta0,(c-b),(q-b));
-		Vec3f::Cross3(tempbeta1,(a-c),(q-c));
-		Vec3f::Cross3(tempbeta2,(b-a),(q-a));
-		if(i0 == 0)
-		{
-			beta0 = tempbeta0.x()/normal.x();	
-			beta1 = tempbeta1.x()/normal.x();
-			beta2 = tempbeta2.x()/normal.x();
-		}
-		else if(i0 == 1)
-		{
-			beta0 = tempbeta0.y()/normal.y();
-			beta1 = tempbeta1.y()/normal.y();
-			beta2 = tempbeta2.y()/normal.y();
-		}
-		else
-		{
-			beta0 = tempbeta0.z()/normal.z();
-			beta1 = tempbeta1.z()/normal.z();
-			beta2 = tempbeta2.z()/normal.z();
-		}
-		if(beta0>=0 && beta0<=1 && beta1>=0 && beta1<=1 && beta2>=0 && beta2<=1)
-		{
-			if(dist > tmin && dist < h.getT())
-			{
-				h.set(dist,material,normal,r);
-				return true;	
-			}
-		}
-	}
-	return false;
-}
-*/
 float hitMesh(Ray ray, Vertex a, Vertex b, Vertex c)
 {
 	///*

@@ -9,7 +9,7 @@
 using namespace std;
 
 
-int main()
+int main(int argc, char **argv)
 {
 	int h, w;
 	//cout<<"please input width and height:"<<endl;
@@ -29,10 +29,15 @@ int main()
 		rtGPU.dataPrepare(w, h);
 		rtGPU.runKernel();
 	
-		rtGPU.putout();
+		//rtGPU.putout();
+		rtGPU.initGlut(argc, argv, "rtGPU(Written by Ambling)");
 	}
 	else
 	{
 		cpuMain(w, h);
+		initGlut(argc, argv, "rtCPU(Written by Ambling)");
 	}
+	
+	glutMainLoop();	
+	return 0;
 }

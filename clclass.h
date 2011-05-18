@@ -4,6 +4,7 @@
 #define CLCLASS_H
 
 #include "CL/cl.h"
+#include <GL/glut.h>
 #include "global.h"
 
 class CL
@@ -19,6 +20,8 @@ public:
 	void runKernel();	
 	
 	void putout();	
+	
+	void initGlut(int, char **, std::string);
 	
 private:
 	//variables for architecture

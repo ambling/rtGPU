@@ -385,3 +385,6 @@ void CL::putout()
 	fclose(file);
 }
 
+void CL::initGlut(int argc, char **argv, std::string windowTittle)
+{}
+
