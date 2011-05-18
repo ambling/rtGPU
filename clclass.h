@@ -13,6 +13,10 @@ public:
 	CL();	
 	~CL();
 	
+	int imWidth, imHeight;
+	Camera camera;
+	unsigned int *pixels; //for showing the resukt in openGL
+	
 	void loadProgram();
 	
 	void dataPrepare(int, int, std::string = "simple.scn");
@@ -22,6 +26,8 @@ public:
 	void putout();	
 	
 	void initGlut(int, char **, std::string);
+	
+	void updateCamera();
 	
 private:
 	//variables for architecture
@@ -41,14 +47,13 @@ private:
 	cl_event event;
 	
 	//variables for memory
-	int imWidth, imHeight;
 	int sphereNum, vertexNum, meshNum, materialNum;
-	Camera camera;
 	Sphere* spheres;
 	Vertex* vertices;
 	Mesh* meshes;
 	Material* materials;
 	Color* output;
+
 	cl_mem outputBuf; //buffer for storing the output color information
 	cl_mem cameraBuf; //buffer for storing the camera information
 	cl_mem sphereBuf; //buffer for storing the spheres information
@@ -59,6 +64,7 @@ private:
 	//functions for temporarily using
 	char* readKernelSources();
 	void readScene(std::string);
+	
 };
 
 #endif

@@ -252,7 +252,7 @@ void keyFunc(unsigned char key, int x, int y) {
 }
 
 #define MOVE_STEP 10.0
-#define ROTATE_STEP (5.0 * 3.1415926 / 180.0)
+#define ROTATE_STEP (10.0 * 3.1415926 / 180.0)
 void specialFunc(int key, int x, int y) {
 	switch (key) {
 		case GLUT_KEY_UP: {

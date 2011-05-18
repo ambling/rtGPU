@@ -9,6 +9,8 @@
 #include "util.h"
 #include <math.h>
 
+CL* rtGPU;
+
 CL::CL()
 {
 	//this function is defined in util.cpp
@@ -49,6 +51,7 @@ CL::CL()
 		exit(-1);
 	}
 	
+	rtGPU = this;
 	//printf("OpenCL initialized successful.\n");
 }
 
@@ -164,9 +167,7 @@ void CL::dataPrepare(int w, int h, std::string sceneFile)
 	clEnqueueWriteBuffer(command_queue, outputBuf, CL_TRUE, 0, sizeof(Color)*w*h, (void*)output, 0, NULL, &event);
 	clReleaseEvent(event);
 	clFinish(command_queue);
-	clEnqueueWriteBuffer(command_queue, cameraBuf, CL_TRUE, 0, sizeof(Camera), (void*)&camera, 0, NULL, &event);
-	clReleaseEvent(event);
-	clFinish(command_queue);
+	
 	clEnqueueWriteBuffer(command_queue, sphereBuf, CL_TRUE, 0, sizeof(Sphere) * sphereNum, 
 							(void*)spheres, 0, NULL, &event);
 	clReleaseEvent(event);
@@ -226,39 +227,7 @@ void CL::readScene(std::string sceneFile)
 			in>>camera.orig.x>>camera.orig.y>>camera.orig.z
 				>>camera.targ.x>>camera.targ.y>>camera.targ.z;
 			
-			vSub(camera.dirc, camera.targ, camera.orig);	//global function, camera direction
-			vNorm(camera.dirc);
-			
-			vec3f up, distance;
-			float angle = 45;
-			vSub(distance, camera.targ, camera.orig);
-			float dis = sqrt(vDot(distance, distance));
-			float scale = tan(angle / 2.0) * dis * 2.0 / imWidth;
-			//printf("scale is %.2f", scale);
-			
-			up.x = 0.0; up.y = 1.0; up.z = 0.0;
-			vCross(camera.x, camera.dirc, up);				//global function, x base direction
-			vNorm(camera.x);
-			vMul(camera.x, camera.x, scale);
-			vCross(camera.y, camera.x, camera.dirc);		//global function, y base direction
-			vNorm(camera.y);
-			vMul(camera.y, camera.y, scale);
-			
-			vec3f displace_x, displace_y;					//displacement from the target to base
-			vMul(displace_x, camera.x, 1.0 * imWidth / 2);
-			vMul(displace_y, camera.y, 1.0 * imHeight / 2);
-			vSub(camera.base, camera.targ, displace_x);
-			vSub(camera.base, camera.base, displace_y);		//base of the coordinate
-			
-			/*for debug
-			vPrint(camera.orig);
-			vPrint(camera.targ);
-			vPrint(camera.dirc);
-			vPrint(camera.x);
-			vPrint(camera.y);
-			vPrint(camera.base);
-			vPrint(displace);
-			*/
+			updateCamera();
 		}
 		else if(tmp == "size")
 		{
@@ -321,6 +290,47 @@ void CL::readScene(std::string sceneFile)
 	}
 }
 
+void CL::updateCamera()
+{
+	vSub(camera.dirc, camera.targ, camera.orig);	//global function, camera direction
+	vNorm(camera.dirc);
+
+	vec3f up, distance;
+	float angle = 45;
+	vSub(distance, camera.targ, camera.orig);
+	float dis = sqrt(vDot(distance, distance));
+	float scale = tan(angle / 2.0) * dis * 2.0 / imWidth;
+	//printf("distance is %f, scale is %f", dis, scale);
+
+	up.x = 0.0; up.y = 1.0; up.z = 0.0;
+	//vInit(up, 7.16376, -6.19517, 6.23901);
+	vCross(camera.x, camera.dirc, up);				//global function, x base direction
+	vNorm(camera.x);
+	vMul(camera.x, camera.x, scale);
+	vCross(camera.y, camera.x, camera.dirc);		//global function, y base direction
+	vNorm(camera.y);
+	vMul(camera.y, camera.y, scale);
+
+	vec3f displace_x, displace_y;					//displacement from the target to base
+	vMul(displace_x, camera.x, 1.0 * imWidth / 2);
+	vMul(displace_y, camera.y, 1.0 * imHeight / 2);
+	vSub(camera.base, camera.targ, displace_x);
+	vSub(camera.base, camera.base, displace_y);		//base of the coordinate
+
+	/*for debug
+	vPrint(camera.orig);
+	vPrint(camera.targ);
+	vPrint(camera.dirc);
+	vPrint(camera.x);
+	vPrint(camera.y);
+	vPrint(camera.base);
+	vPrint(displace);
+	*/
+	clEnqueueWriteBuffer(command_queue, cameraBuf, CL_TRUE, 0, sizeof(Camera), (void*)&camera, 0, NULL, &event);
+	clReleaseEvent(event);
+	clFinish(command_queue);
+}
+
 
 void CL::runKernel()
 {
@@ -350,6 +360,13 @@ void CL::runKernel()
 	}
 	clReleaseEvent(event);
 	clFinish(command_queue);
+	
+	for(int index = 0; index < size; index ++)
+	{
+		pixels[index] = (int)(255*output[index].x) |
+					((int)(255*output[index].y) << 8) |
+					((int)(255*output[index].z) << 16);
+	}
 	//*/
 	/*
 	for(int i = 0; i < size; i++)
@@ -385,6 +402,134 @@ void CL::putout()
 	fclose(file);
 }
 
+void ReInitGPU(const int reallocBuffers) {
+	/*
+	// Check if I have to reallocate buffers
+	if (reallocBuffers) {
+		freeBuffer();
+		const int pixelCount = imWidth * imHeight ;
+		pixels = (unsigned int*)malloc(sizeof(unsigned int[pixelCount]));	
+		output = new Color[size];
+		readScene();
+	}
+	*/
+
+	rtGPU->updateCamera();
+
+	rtGPU->runKernel();
+}
+
+void idleFuncGPU(void) {
+	rtGPU->runKernel();
+
+	glutPostRedisplay();
+}
+
+void displayFuncGPU(void) {
+	glClear(GL_COLOR_BUFFER_BIT);
+	glRasterPos2i(0, 0);
+	glDrawPixels(rtGPU->imWidth, rtGPU->imHeight, GL_RGBA, GL_UNSIGNED_BYTE, rtGPU->pixels);
+
+	glutSwapBuffers();
+}
+
+void reshapeFuncGPU(int newWidth, int newHeight) {
+	int width = newWidth;
+	int height = newHeight;
+
+	glViewport(0, 0, width, height);
+	glLoadIdentity();
+	glOrtho(0.f, width - 1.f, 0.f, height - 1.f, -1.f, 1.f);
+
+	ReInitGPU(1);
+
+	glutPostRedisplay();
+}
+
+void keyFuncGPU(unsigned char key, int x, int y) {
+	switch (key) {
+		case 'p': {
+			break;
+		}
+		default:
+			break;
+	}
+}
+
+#define MOVE_STEP 10.0
+#define ROTATE_STEP (10.0 * 3.1415926 / 180.0)
+void specialFuncGPU(int key, int x, int y) {
+	switch (key) {
+		case GLUT_KEY_UP: {
+			vec3f t = rtGPU->camera.targ;
+			vSub(t, t, rtGPU->camera.orig);
+			t.y = t.y * cos(-ROTATE_STEP) + t.z * sin(-ROTATE_STEP);
+			t.z = -t.y * sin(-ROTATE_STEP) + t.z * cos(-ROTATE_STEP);
+			vSub(t, rtGPU->camera.targ, t);
+			rtGPU->camera.orig = t;
+			ReInitGPU(0);
+			break;
+		}
+		case GLUT_KEY_DOWN: {
+			vec3f t = rtGPU->camera.targ;
+			vSub(t, t, rtGPU->camera.orig);
+			t.y = t.y * cos(ROTATE_STEP) + t.z * sin(ROTATE_STEP);
+			t.z = -t.y * sin(ROTATE_STEP) + t.z * cos(ROTATE_STEP);
+			vSub(t, rtGPU->camera.targ, t);
+			rtGPU->camera.orig = t;
+			ReInitGPU(0);
+			break;
+		}
+		case GLUT_KEY_LEFT: {
+			vec3f t = rtGPU->camera.targ;
+			vSub(t, t, rtGPU->camera.orig);
+			t.x = t.x * cos(-ROTATE_STEP) - t.z * sin(-ROTATE_STEP);
+			t.z = t.x * sin(-ROTATE_STEP) + t.z * cos(-ROTATE_STEP);
+			vSub(t, rtGPU->camera.targ, t);
+			rtGPU->camera.orig = t;
+			ReInitGPU(0);
+			break;
+		}
+		case GLUT_KEY_RIGHT: {
+			vec3f t = rtGPU->camera.targ;
+			vSub(t, t, rtGPU->camera.orig);
+			t.x = t.x * cos(ROTATE_STEP) - t.z * sin(ROTATE_STEP);
+			t.z = t.x * sin(ROTATE_STEP) + t.z * cos(ROTATE_STEP);
+			vSub(t, rtGPU->camera.targ, t);
+			rtGPU->camera.orig = t;
+			ReInitGPU(0);
+			break;
+		}
+		case GLUT_KEY_PAGE_UP:
+			rtGPU->camera.targ.y += MOVE_STEP;
+			ReInitGPU(0);
+			break;
+		case GLUT_KEY_PAGE_DOWN:
+			rtGPU->camera.targ.y -= MOVE_STEP;
+			ReInitGPU(0);
+			break;
+		default:
+			break;
+	}
+}
+
 void CL::initGlut(int argc, char **argv, std::string windowTittle)
-{}
+{
+    glutInitWindowSize(imWidth, imHeight);
+    glutInitWindowPosition(0,0);
+    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
+	glutInit(&argc, argv);
+
+	glutCreateWindow(windowTittle.c_str());
+
+    glutReshapeFunc(reshapeFuncGPU);
+    glutKeyboardFunc(keyFuncGPU);
+    glutSpecialFunc(specialFuncGPU);
+    glutDisplayFunc(displayFuncGPU);
+	glutIdleFunc(idleFuncGPU);
+
+	glViewport(0, 0, imWidth, imHeight);
+	glLoadIdentity();
+	glOrtho(0.f, imWidth - 1.f, 0.f, imHeight - 1.f, -1.f, 1.f);
+}
 

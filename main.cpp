@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 	h = 600;
 
 	//cout<<"Choose device('g' for GPU, 'c' for CPU):";
-	char c = 'c';
+	char c = 'g';
 	//cin>>c;
 	
 	if(c == 'g')

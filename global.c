@@ -403,7 +403,7 @@ __global
 			}
 			else
 			{
-				if(hitIndex < minIndex)
+				if(hitIndex - minIndex < 0)
 				{
 					minIndex = hitIndex;
 					minMesh = i;
