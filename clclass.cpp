@@ -52,7 +52,7 @@ CL::CL()
 	}
 	
 	rtGPU = this;
-	//printf("OpenCL initialized successful.\n");
+	printf("OpenCL initialized successful.\n");
 }
 
 CL::~CL()
@@ -71,6 +71,7 @@ CL::~CL()
 	if(meshes) delete meshes;
 	if(materials) delete materials;
 	if(output)	delete output;
+	if(pixels) delete pixels;
 }
 
 void CL::loadProgram()
@@ -87,7 +88,7 @@ void CL::loadProgram()
 	}
 	
 	err = clBuildProgram(program, 1, devices, "-I. ", NULL, NULL);	
-	///* for debug
+	/* for debug
 	size_t len;
 	char *buffer;
 	clGetProgramBuildInfo(program, devices[device_used], CL_PROGRAM_BUILD_LOG, 0, NULL, &len);
@@ -106,7 +107,9 @@ void CL::loadProgram()
 	{
 		printf("clCreateKernel : %s\n", oclErrorString(err));
 		exit(-1);
-	}		
+	}
+	
+	printf("OpenCL program loading successful.\n");		
 	
 }
 
@@ -145,6 +148,8 @@ void CL::dataPrepare(int w, int h, std::string sceneFile)
 	imWidth = w;
 	imHeight = h;
 	
+	cameraBuf = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(Camera), &camera, NULL);  //created ahead for update
+	
 	readScene(sceneFile); //default as simple.scn
 	
 	output = new Color[w*h];
@@ -154,15 +159,14 @@ void CL::dataPrepare(int w, int h, std::string sceneFile)
 		output[i].y = 0;
 		output[i].z = 0;
 	}
+	pixels = new unsigned int[w * h];	
 	
 	//create buffer for kernel
 	outputBuf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(Color) * imWidth * imHeight, NULL, NULL);
-	cameraBuf = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(Camera), &camera, NULL);
 	sphereBuf = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(Sphere) * sphereNum, spheres, NULL);
 	vertexBuf = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(Vertex) * vertexNum, vertices, NULL);
 	meshBuf = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(Mesh) * meshNum, meshes, NULL);
 	materialBuf = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(Material) * materialNum, materials, NULL);
-
 	
 	clEnqueueWriteBuffer(command_queue, outputBuf, CL_TRUE, 0, sizeof(Color)*w*h, (void*)output, 0, NULL, &event);
 	clReleaseEvent(event);
@@ -207,6 +211,8 @@ void CL::dataPrepare(int w, int h, std::string sceneFile)
 	clSetKernelArg(kernel, 9, sizeof(cl_mem), (void* )&meshBuf);
 	clSetKernelArg(kernel, 10, sizeof(cl_mem), (void* )&outputBuf);
 	clFinish(command_queue);
+	
+	printf("OpenCL data preparation successful.\n");
 }
 
 void CL::readScene(std::string sceneFile)
@@ -326,9 +332,14 @@ void CL::updateCamera()
 	vPrint(camera.base);
 	vPrint(displace);
 	*/
+	
+	printf("OpenCL camera update successful.\n");
+	
 	clEnqueueWriteBuffer(command_queue, cameraBuf, CL_TRUE, 0, sizeof(Camera), (void*)&camera, 0, NULL, &event);
 	clReleaseEvent(event);
 	clFinish(command_queue);
+	
+	printf("OpenCL camera buffer update successful.\n");
 }
 
 
@@ -361,12 +372,18 @@ void CL::runKernel()
 	clReleaseEvent(event);
 	clFinish(command_queue);
 	
+	printf("OpenCL kernel task is completed successful.\n");
+	
+	///*
 	for(int index = 0; index < size; index ++)
 	{
 		pixels[index] = (int)(255*output[index].x) |
 					((int)(255*output[index].y) << 8) |
 					((int)(255*output[index].z) << 16);
 	}
+	
+	printf("OpenCL pixels buffer update successful.\n");
+	//*/
 	//*/
 	/*
 	for(int i = 0; i < size; i++)
@@ -403,7 +420,7 @@ void CL::putout()
 }
 
 void ReInitGPU(const int reallocBuffers) {
-	/*
+	/* no support of resize
 	// Check if I have to reallocate buffers
 	if (reallocBuffers) {
 		freeBuffer();
@@ -420,7 +437,7 @@ void ReInitGPU(const int reallocBuffers) {
 }
 
 void idleFuncGPU(void) {
-	rtGPU->runKernel();
+	//rtGPU->runKernel();
 
 	glutPostRedisplay();
 }
@@ -434,12 +451,13 @@ void displayFuncGPU(void) {
 }
 
 void reshapeFuncGPU(int newWidth, int newHeight) {
-	int width = newWidth;
-	int height = newHeight;
+	printf("reshape\n");
+	rtGPU->imWidth = newWidth;
+	rtGPU->imHeight = newHeight;
 
-	glViewport(0, 0, width, height);
+	glViewport(0, 0, newWidth, newHeight);
 	glLoadIdentity();
-	glOrtho(0.f, width - 1.f, 0.f, height - 1.f, -1.f, 1.f);
+	glOrtho(0.f, newWidth - 1.f, 0.f, newHeight - 1.f, -1.f, 1.f);
 
 	ReInitGPU(1);
 

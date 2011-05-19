@@ -360,7 +360,7 @@ __global
 {
 	int i;
 	int hitOrNot = 0;
-	int minIndex;
+	float minIndex;
 	int minSphere = -1;
 	for(i = 0; i < sphereNum; i++)
 	{
@@ -383,6 +383,23 @@ __global
 			}			
 		}
 	}	
+	
+	
+	/*for debug
+	Color sample[12];
+	vInit(sample[0], 1, 1 ,1);
+	vInit(sample[1], 0, 1 ,0);
+	vInit(sample[2], 0, 0 ,1);
+	vInit(sample[3], 1, 0 ,0);
+	vInit(sample[4], 0, 1 ,1);
+	vInit(sample[5], 1, 1 ,0);
+	vInit(sample[6], 1, 0 ,1);
+	vInit(sample[7], 0, 0 ,0.5);
+	vInit(sample[8], 0, 0.5 ,0);
+	vInit(sample[9], 0.5, 0 ,0);
+	vInit(sample[10], 0.5, 0.5 ,0);
+	vInit(sample[11], 0, 0.5 ,0.5);
+	//*/
 	
 	int minMesh = -1;
 	for(i = 0; i < meshNum; i++)
@@ -415,26 +432,13 @@ __global
 	if((minMesh != -1) || (minSphere != -1))
 	{
 		#ifndef GPU_KERNEL
-		//printf("hit mesh: %d\n", minMesh);
+		//printf("hit mesh: %d, %f\n", minMesh, minIndex);
 		#endif
-		Color sample[12];
-		vInit(sample[0], 1, 1 ,1);
-		vInit(sample[1], 0, 1 ,0);
-		vInit(sample[2], 0, 0 ,1);
-		vInit(sample[3], 1, 0 ,0);
-		vInit(sample[4], 0, 1 ,1);
-		vInit(sample[5], 1, 1 ,0);
-		vInit(sample[6], 1, 0 ,1);
-		vInit(sample[7], 0, 0 ,0.5);
-		vInit(sample[8], 0, 0.5 ,0);
-		vInit(sample[9], 0.5, 0 ,0);
-		vInit(sample[10], 0.5, 0.5 ,0);
-		vInit(sample[11], 0, 0.5 ,0.5);
-
-		vAssign((*color), sample[minMesh]);
-		//setColor(ray, minIndex, minSphere, minMesh, sphereNum, vertexNum, 
-		//				materialNum, meshNum, spheres, vertices, 
-		//				materials, meshes, color);
+		
+		//vAssign((*color), sample[minMesh]);
+		setColor(ray, minIndex, minSphere, minMesh, sphereNum, vertexNum, 
+						materialNum, meshNum, spheres, vertices, 
+						materials, meshes, color);
 	}
 	else
 	{//not intersection, set black

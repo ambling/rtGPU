@@ -12,6 +12,7 @@ using namespace std;
 int main(int argc, char **argv)
 {
 	int h, w;
+	CL rtGPU;
 	//cout<<"please input width and height:"<<endl;
 	//cin>>w;
 	//cin>>h;
@@ -19,12 +20,11 @@ int main(int argc, char **argv)
 	h = 600;
 
 	//cout<<"Choose device('g' for GPU, 'c' for CPU):";
-	char c = 'g';
+	char c = 'c';
 	//cin>>c;
 	
 	if(c == 'g')
 	{
-		CL rtGPU;
 		rtGPU.loadProgram();
 		rtGPU.dataPrepare(w, h);
 		rtGPU.runKernel();

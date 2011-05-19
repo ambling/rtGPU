@@ -229,12 +229,12 @@ void displayFunc(void) {
 }
 
 void reshapeFunc(int newWidth, int newHeight) {
-	int width = newWidth;
-	int height = newHeight;
+	imWidth = newWidth;
+	imHeight = newHeight;
 
-	glViewport(0, 0, width, height);
+	glViewport(0, 0, imWidth, imHeight);
 	glLoadIdentity();
-	glOrtho(0.f, width - 1.f, 0.f, height - 1.f, -1.f, 1.f);
+	glOrtho(0.f, imWidth - 1.f, 0.f, imHeight - 1.f, -1.f, 1.f);
 
 	ReInit(1);
 
