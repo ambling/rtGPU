@@ -152,6 +152,8 @@ void CL::dataPrepare(int w, int h, std::string sceneFile)
 	
 	readScene(sceneFile); //default as simple.scn
 	
+	printf("OpenCL scene reading successful.\n");		
+	
 	output = new Color[w*h];
 	for(int i = 0; i < w*h; i++)
 	{
@@ -166,29 +168,40 @@ void CL::dataPrepare(int w, int h, std::string sceneFile)
 	sphereBuf = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(Sphere) * sphereNum, spheres, NULL);
 	vertexBuf = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(Vertex) * vertexNum, vertices, NULL);
 	meshBuf = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(Mesh) * meshNum, meshes, NULL);
-	materialBuf = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(Material) * materialNum, materials, NULL);
+	materialBuf = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(Material) * materialNum, materials, NULL);	
 	
 	clEnqueueWriteBuffer(command_queue, outputBuf, CL_TRUE, 0, sizeof(Color)*w*h, (void*)output, 0, NULL, &event);
 	clReleaseEvent(event);
 	clFinish(command_queue);
 	
-	clEnqueueWriteBuffer(command_queue, sphereBuf, CL_TRUE, 0, sizeof(Sphere) * sphereNum, 
-							(void*)spheres, 0, NULL, &event);
-	clReleaseEvent(event);
-	clFinish(command_queue);
-	clEnqueueWriteBuffer(command_queue, vertexBuf, CL_TRUE, 0, sizeof(Vertex) * vertexNum, 
-							(void*)vertices, 0, NULL, &event);
-	clReleaseEvent(event);
-	clFinish(command_queue);
-	clEnqueueWriteBuffer(command_queue, meshBuf, CL_TRUE, 0, sizeof(Mesh) * meshNum, 
-							(void*)meshes, 0, NULL, &event);
-	clReleaseEvent(event);
-	clFinish(command_queue);
-	clEnqueueWriteBuffer(command_queue, materialBuf, CL_TRUE, 0, sizeof(Material) * materialNum, 
-							(void*)materials, 0, NULL, &event);
-	clReleaseEvent(event);
-	clFinish(command_queue);
-	
+	if(sphereNum != 0)
+	{
+		clEnqueueWriteBuffer(command_queue, sphereBuf, CL_TRUE, 0, sizeof(Sphere) * sphereNum, 
+								(void*)spheres, 0, NULL, &event);
+		clReleaseEvent(event);
+		clFinish(command_queue);
+	}
+	if(vertexNum != 0)
+	{
+		clEnqueueWriteBuffer(command_queue, vertexBuf, CL_TRUE, 0, sizeof(Vertex) * vertexNum, 
+								(void*)vertices, 0, NULL, &event);
+		clReleaseEvent(event);
+		clFinish(command_queue);
+	}
+	if(meshNum != 0)
+	{
+		clEnqueueWriteBuffer(command_queue, meshBuf, CL_TRUE, 0, sizeof(Mesh) * meshNum, 
+								(void*)meshes, 0, NULL, &event);
+		clReleaseEvent(event);
+		clFinish(command_queue);
+	}
+	if(materialNum != 0)
+	{
+		clEnqueueWriteBuffer(command_queue, materialBuf, CL_TRUE, 0, sizeof(Material) * materialNum, 
+								(void*)materials, 0, NULL, &event);
+		clReleaseEvent(event);
+		clFinish(command_queue);
+	}
 	/*
 	__kernel void test(const int width, const int sphereNum, const int vertexNum, 
 		const int materialNum, const int meshNum, 
@@ -217,7 +230,7 @@ void CL::dataPrepare(int w, int h, std::string sceneFile)
 
 void CL::readScene(std::string sceneFile)
 {//get information from scene file
-	sceneFile = "simple.scn";
+	//sceneFile = "simple.scn";
 	//sceneFile = "simplest.scn";
 	std::ifstream in;
 	in.open(sceneFile.c_str());
@@ -333,13 +346,13 @@ void CL::updateCamera()
 	vPrint(displace);
 	*/
 	
-	printf("OpenCL camera update successful.\n");
+	//printf("OpenCL camera update successful.\n");
 	
 	clEnqueueWriteBuffer(command_queue, cameraBuf, CL_TRUE, 0, sizeof(Camera), (void*)&camera, 0, NULL, &event);
 	clReleaseEvent(event);
 	clFinish(command_queue);
 	
-	printf("OpenCL camera buffer update successful.\n");
+	//printf("OpenCL camera buffer update successful.\n");
 }
 
 
@@ -372,7 +385,7 @@ void CL::runKernel()
 	clReleaseEvent(event);
 	clFinish(command_queue);
 	
-	printf("OpenCL kernel task is completed successful.\n");
+	//printf("OpenCL kernel task is completed successful.\n");
 	
 	///*
 	for(int index = 0; index < size; index ++)
@@ -382,7 +395,7 @@ void CL::runKernel()
 					((int)(255*output[index].z) << 16);
 	}
 	
-	printf("OpenCL pixels buffer update successful.\n");
+	//printf("OpenCL pixels buffer update successful.\n");
 	//*/
 	//*/
 	/*
@@ -451,7 +464,6 @@ void displayFuncGPU(void) {
 }
 
 void reshapeFuncGPU(int newWidth, int newHeight) {
-	printf("reshape\n");
 	rtGPU->imWidth = newWidth;
 	rtGPU->imHeight = newHeight;
 
@@ -466,9 +478,12 @@ void reshapeFuncGPU(int newWidth, int newHeight) {
 
 void keyFuncGPU(unsigned char key, int x, int y) {
 	switch (key) {
-		case 'p': {
+		case 27: /* Escape key */
+			exit(0);
 			break;
-		}
+		case 'q': /* quit */
+			exit(0);
+			break;
 		default:
 			break;
 	}

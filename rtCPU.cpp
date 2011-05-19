@@ -19,7 +19,8 @@ unsigned int *pixels;
 
 void readScene(string sceneFile)
 {//get information from scene file
-	sceneFile = "simple.scn";
+	//sceneFile = "xmls/example2.scn";
+	//sceneFile = "simple.scn";
 	//sceneFile = "simplest.scn";
 	std::ifstream in;
 	in.open(sceneFile.c_str());
@@ -176,7 +177,7 @@ void rendering()
 	}
 }
 
-void cpuMain(int width, int height)
+void cpuMain(int width, int height, string sceneFile)
 {
 	imWidth = width;
 	imHeight = height;
@@ -185,7 +186,7 @@ void cpuMain(int width, int height)
 	const int pixelCount = imWidth * imHeight ;
 	pixels = (unsigned int*)malloc(sizeof(unsigned int[pixelCount]));	
 	
-	readScene();
+	readScene(sceneFile);
 	
 	/*
 	for(int i = 0; i < meshNum; i++)
@@ -202,11 +203,10 @@ void cpuMain(int width, int height)
 void ReInit(const int reallocBuffers) {
 	// Check if I have to reallocate buffers
 	if (reallocBuffers) {
-		freeBuffer();
-		const int pixelCount = imWidth * imHeight ;
-		pixels = (unsigned int*)malloc(sizeof(unsigned int[pixelCount]));	
+		if(pixels) delete pixels;
+		if(output) delete output;
+		pixels = new unsigned int[size];	
 		output = new Color[size];
-		readScene();
 	}
 
 	updateCamera();
@@ -243,9 +243,12 @@ void reshapeFunc(int newWidth, int newHeight) {
 
 void keyFunc(unsigned char key, int x, int y) {
 	switch (key) {
-		case 'p': {
+		case 27: /* Escape key */
+			exit(0);
 			break;
-		}
+		case 'q': /* quit */
+			exit(0);
+			break;
 		default:
 			break;
 	}

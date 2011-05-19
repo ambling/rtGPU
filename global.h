@@ -64,16 +64,5 @@ typedef struct
 #define vCross(v, a, b) vInit(v, (a).y * (b).z - (a).z * (b).y, (a).z * (b).x - (a).x * (b).z, (a).x * (b).y - (a).y * (b).x)
 #define det3v(a, b, c) ((a).x*(b).y*(c).z + (b).x*(c).y*(a).z + (c).x*(a).y*(b).z - (c).x*(b).y*(a).z - (a).x*(c).y*(b).z - (b).x*(a).y*(c).z)
 
-#ifndef GPU_KERNEL
-float hitSphere(Ray ray, Sphere sphere);
-float hitMesh(Ray ray, Vertex a, Vertex b, Vertex c);
-void setColor(Ray ray, float t, int obSphere, int obMesh, int sphereNum, 
-	int vertexNum, int materialNum, int meshNum, Sphere* spheres, 
-	Vertex* vertices, Material* materials, Mesh* meshes, Color *color);
-Ray rayGenerate(Camera camera, int w, int h);
-void rayCasting(Ray ray, int sphereNum, int vertexNum, 
-	int materialNum, int meshNum, Sphere* spheres, 
-	Vertex* vertices, Material* materials, Mesh* meshes, Color *color);
-#endif	
 
 #endif

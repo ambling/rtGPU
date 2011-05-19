@@ -20,13 +20,18 @@ int main(int argc, char **argv)
 	h = 600;
 
 	//cout<<"Choose device('g' for GPU, 'c' for CPU):";
-	char c = 'c';
+	char c;
 	//cin>>c;
+	c = argv[1][0];
+	string scenefile(argv[2]);
+	//cout<<c<<endl;
+	//cout<<scenefile<<endl;
+	
 	
 	if(c == 'g')
 	{
 		rtGPU.loadProgram();
-		rtGPU.dataPrepare(w, h);
+		rtGPU.dataPrepare(w, h, scenefile);
 		rtGPU.runKernel();
 	
 		//rtGPU.putout();
@@ -34,7 +39,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		cpuMain(w, h);
+		cpuMain(w, h, scenefile);
 		initGlut(argc, argv, "rtCPU(Written by Ambling)");
 	}
 	
