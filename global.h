@@ -51,7 +51,7 @@ typedef struct
 
 // global functions
 
-#define EPSILON 0.0001
+#define EPSILON 0.001
 #define vPrint(v) { printf("%.2f %.2f %.2f\n", (v).x, (v).y, (v).z); }
 #define vInit(v, a, b, c) { (v).x = a; (v).y = b; (v).z = c; }
 #define vAssign(a, b) vInit(a, (b).x, (b).y, (b).z)

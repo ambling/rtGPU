@@ -292,6 +292,10 @@ __global
 			
 			return newray;
 		}
+		else if(spheres[obSphere].ref == 2)
+		{//refraction
+		
+		}
 	}
 	else if(obMesh != -1)
 	{//is mesh;
@@ -305,17 +309,17 @@ __global
 			vAssign((*color), materials[meshes[obMesh].ma].emi);
 			vAdd((*color), (*color), background);
 
-			vec3f norm, pos, pa, pb;
+			vec3f norm, pos, ab, bc;
 			vMul(pos, ray.dirc, t);
 			vAdd(pos, ray.orig, pos);		//position = R + tD
-			vSub(pa, vertices[meshes[obMesh].a], pos);	//pa = a - p
-			vSub(pb, vertices[meshes[obMesh].b], pos);	//pa = a - p
-			vCross(norm, pa, pb);
+			vSub(ab, vertices[meshes[obMesh].b], vertices[meshes[obMesh].a]);	//pa = a - p
+			vSub(bc, vertices[meshes[obMesh].c], vertices[meshes[obMesh].b]);	//pa = a - p
+			vCross(norm, ab, bc);		//norm == ab x bc, to determine the right direction
 			#ifndef GPU_KERNEL
 			//printf("norm: ");vPrint(norm);
 			//printf("ray.dirc: ");vPrint(ray.dirc);
 			#endif
-			if(vDot(norm, ray.dirc) > EPSILON) vMul(norm, norm, -1.0); //set the direction of norm
+			//if(vDot(norm, ray.dirc) > EPSILON) vMul(norm, norm, -1.0); //set the direction of norm
 			vNorm(norm);
 	
 			int i;			
@@ -346,13 +350,17 @@ __global
 		{//specular
 			Ray newray;
 			
-			vec3f norm, pos, pa, pb;
+			vec3f norm, pos, ab, bc;
 			vMul(pos, ray.dirc, t);
 			vAdd(pos, ray.orig, pos);		//position = R + tD
-			vSub(pa, vertices[meshes[obMesh].a], pos);	//pa = a - p
-			vSub(pb, vertices[meshes[obMesh].b], pos);	//pa = a - p
-			vCross(norm, pa, pb);
-			if(vDot(norm, ray.dirc) > EPSILON) vMul(norm, norm, -1.0); //set the direction of norm
+			vSub(ab, vertices[meshes[obMesh].b], vertices[meshes[obMesh].a]);	//pa = a - p
+			vSub(bc, vertices[meshes[obMesh].c], vertices[meshes[obMesh].b]);	//pa = a - p
+			vCross(norm, ab, bc);		//norm == ab x bc, to determine the right direction
+			#ifndef GPU_KERNEL
+			//printf("norm: ");vPrint(norm);
+			//printf("ray.dirc: ");vPrint(ray.dirc);
+			#endif
+			//if(vDot(norm, ray.dirc) > EPSILON) vMul(norm, norm, -1.0); //set the direction of norm
 			vNorm(norm);
 			
 			vAssign(newray.orig, pos);
@@ -429,12 +437,12 @@ __global
 		vInit(addColor, 0, 0, 0);
 		int i;
 		int hitOrNot = 0;
-		float minIndex;
+		float minIndex = -1;
 		int minSphere = -1;
 		for(i = 0; i < sphereNum; i++)
 		{
 			float hitIndex = hitSphere(ray, spheres[i]);
-			if(hitIndex > 0) 
+			if(hitIndex > EPSILON) 
 			{	
 				if(hitOrNot == 0)
 				{
@@ -479,7 +487,7 @@ __global
 			#ifndef GPU_KERNEL
 			//printf("hit mesh: %d\n", meshNum);
 			#endif
-			if(hitIndex > 0) 
+			if(hitIndex > EPSILON) 
 			{	
 				if(hitOrNot == 0)
 				{
