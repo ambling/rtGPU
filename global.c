@@ -223,8 +223,8 @@ __global
 #endif
 	Mesh* meshes, Color *color)
 {
-	vec3f background;
-	vInit(background, 0.1, 0.1, 0.1);
+	vec3f ambient;
+	vInit(ambient, 0.1, 0.1, 0.1);
 	
 	if(obSphere != -1)
 	{//is sphere
@@ -234,7 +234,7 @@ __global
 		if(spheres[obSphere].ref == 0)
 		{//diffuse
 			vAssign((*color), spheres[obSphere].emi);
-			vAdd((*color), (*color), background);
+			vAdd((*color), (*color), ambient);
 	
 			vec3f norm, pos;
 			vMul(pos, ray.dirc, t);
@@ -294,7 +294,39 @@ __global
 		}
 		else if(spheres[obSphere].ref == 2)
 		{//refraction
-		
+			Ray newray;
+			
+			vec3f norm, pos;
+			vMul(pos, ray.dirc, t);
+			vAdd(pos, ray.orig, pos);		//position = R + tD
+			vSub(norm, pos, spheres[obSphere].pos);		//normal = position - p0
+			vNorm(norm);
+			
+			float n = spheres[obSphere].outrfr / spheres[obSphere].inrfr;	//default: n = n1 / n2
+			float cosI = - vDot(ray.dirc, norm);
+			if(cosI < 0)
+			{//the ray is inside the sphere
+				cosI = - cosI;
+				n = 1 / n;
+				vMul(norm, norm, -1);
+			}
+			float cos2O = 1.0f - n * n * (1.0f - cosI * cosI);		//the square of cosO, may be negative
+			if(cos2O > 0)
+			{//has refraction ray
+				vec3f displace;
+				vMul(displace, ray.dirc, 0.01);
+				vAdd(newray.orig, pos, displace);
+				
+				vec3f tmp1, tmp2;
+				vMul(tmp1, ray.dirc, n);
+				float tmp = n * cosI - sqrt(cos2O);
+				vMul(tmp2, norm, tmp);
+				vAdd(newray.dirc, tmp1, tmp2);			//newD = (n * ray.dirc) + (n * cosI - sqrt( cos2O )) * N;
+				
+				return newray;
+			}
+			
+			return ray;
 		}
 	}
 	else if(obMesh != -1)
@@ -307,7 +339,7 @@ __global
 		if(materials[meshes[obMesh].ma].ref == 0)
 		{//diffuse
 			vAssign((*color), materials[meshes[obMesh].ma].emi);
-			vAdd((*color), (*color), background);
+			vAdd((*color), (*color), ambient);
 
 			vec3f norm, pos, ab, bc;
 			vMul(pos, ray.dirc, t);
@@ -373,8 +405,47 @@ __global
 			
 		}
 		else if(materials[meshes[obMesh].ma].ref == 2)
-		{
-		
+		{//refraction
+			Ray newray;
+			
+			vec3f norm, pos, ab, bc;
+			vMul(pos, ray.dirc, t);
+			vAdd(pos, ray.orig, pos);		//position = R + tD
+			vSub(ab, vertices[meshes[obMesh].b], vertices[meshes[obMesh].a]);	//pa = a - p
+			vSub(bc, vertices[meshes[obMesh].c], vertices[meshes[obMesh].b]);	//pa = a - p
+			vCross(norm, ab, bc);		//norm == ab x bc, to determine the right direction
+			#ifndef GPU_KERNEL
+			//printf("norm: ");vPrint(norm);
+			//printf("ray.dirc: ");vPrint(ray.dirc);
+			#endif
+			//if(vDot(norm, ray.dirc) > EPSILON) vMul(norm, norm, -1.0); //set the direction of norm
+			vNorm(norm);
+			
+			float n = materials[meshes[obMesh].ma].outrfr / materials[meshes[obMesh].ma].inrfr;	//default: n = n1 / n2
+			float cosI = - vDot(ray.dirc, norm);
+			if(cosI < 0)
+			{//the ray is inside the mesh box
+				cosI = - cosI;
+				n = 1 / n;
+				vMul(norm, norm, -1);
+			}
+			float cos2O = 1.0f - n * n * (1.0f - cosI * cosI);		//the square of cosO, may be negative
+			if(cos2O > 0)
+			{//has refraction ray
+				vec3f displace;
+				vMul(displace, ray.dirc, 0.01);
+				vAdd(newray.orig, pos, displace);
+				
+				vec3f tmp1, tmp2;
+				vMul(tmp1, ray.dirc, n);
+				float tmp = n * cosI - sqrt(cos2O);
+				vMul(tmp2, norm, tmp);
+				vAdd(newray.dirc, tmp1, tmp2);			//newD = (n * ray.dirc) + (n * cosI - sqrt( cos2O )) * N;
+				
+				return newray;
+			}
+			
+			return ray;
 		}
 		//*/
 	}
@@ -429,7 +500,7 @@ __global
 #endif
 	Mesh* meshes, Color *color)
 {
-	int depth = 3;
+	int depth = 5;
 	vInit((*color), 0, 0, 0);
 	while(depth --)
 	{

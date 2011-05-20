@@ -35,12 +35,14 @@ typedef struct
 	float rad; //radius 
 	vec3f pos, emi, color;  // position, emission, color 
 	int ref;  //reflection type, 0 for DIFF, 1 for SPEC, 2 for REFR
+	float outrfr, inrfr;	//the index of refraction for space outside and inside the sphere 
 } Sphere;
 
 typedef struct
 {
 	vec3f emi, color;  // position, emission, color 
 	int ref;  //reflection type, 0 for DIFF, 1 for SPEC, 2 for REFR
+	float outrfr, inrfr;	//the index of refraction for space outside and inside the mesh 
 } Material;
 
 typedef struct

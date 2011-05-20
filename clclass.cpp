@@ -264,6 +264,7 @@ void CL::readScene(std::string sceneFile)
 				>>(p->emi.x)>>(p->emi.y)>>(p->emi.z)
 				>>(p->color.x)>>(p->color.y)>>(p->color.z);
 			in>>p->ref;
+			in>>p->outrfr>>p->inrfr;
 			if(p->emi.x != 0 || p->emi.y != 0 || p->emi.z != 0)
 			{ 
 				//vNorm(p->emi);
@@ -294,6 +295,7 @@ void CL::readScene(std::string sceneFile)
 			in>>(p->emi.x)>>(p->emi.y)>>(p->emi.z)
 				>>(p->color.x)>>(p->color.y)>>(p->color.z);
 			in>>p->ref;
+			in>>p->outrfr>>p->inrfr;
 			
 			if(p->emi.x != 0 || p->emi.y != 0 || p->emi.z != 0)
 			{ 
@@ -476,6 +478,8 @@ void reshapeFuncGPU(int newWidth, int newHeight) {
 	glutPostRedisplay();
 }
 
+#define MOVE_STEP 10.0
+#define ROTATE_STEP (10.0 * 3.1415926 / 180.0)
 void keyFuncGPU(unsigned char key, int x, int y) {
 	switch (key) {
 		case 27: /* Escape key */
@@ -484,16 +488,46 @@ void keyFuncGPU(unsigned char key, int x, int y) {
 		case 'q': /* quit */
 			exit(0);
 			break;
+		case 'w': /* closer */
+		{
+			vec3f t = rtGPU->camera.dirc;
+			vMul(t, t, MOVE_STEP);
+			vAdd(rtGPU->camera.orig, rtGPU->camera.orig, t);
+			ReInitGPU(0);
+			break;
+		}
+		case 's': /* farther */
+		{
+			vec3f t = rtGPU->camera.dirc;
+			vMul(t, t, MOVE_STEP);
+			vSub(rtGPU->camera.orig, rtGPU->camera.orig, t);
+			ReInitGPU(0);
+			break;
+		}
+		case 'a': /* move left */
+		{
+			vec3f t = rtGPU->camera.x;
+			vMul(t, t, MOVE_STEP);
+			vAdd(rtGPU->camera.orig, rtGPU->camera.orig, t);
+			ReInitGPU(0);
+			break;
+		}
+		case 'd': /* move right */
+		{
+			vec3f t = rtGPU->camera.x;
+			vMul(t, t, MOVE_STEP);
+			vSub(rtGPU->camera.orig, rtGPU->camera.orig, t);
+			ReInitGPU(0);
+			break;
+		}
 		default:
 			break;
 	}
 }
 
-#define MOVE_STEP 10.0
-#define ROTATE_STEP (10.0 * 3.1415926 / 180.0)
 void specialFuncGPU(int key, int x, int y) {
 	switch (key) {
-		case GLUT_KEY_UP: {
+		case GLUT_KEY_DOWN: {
 			vec3f t = rtGPU->camera.targ;
 			vSub(t, t, rtGPU->camera.orig);
 			t.y = t.y * cos(-ROTATE_STEP) + t.z * sin(-ROTATE_STEP);
@@ -503,7 +537,7 @@ void specialFuncGPU(int key, int x, int y) {
 			ReInitGPU(0);
 			break;
 		}
-		case GLUT_KEY_DOWN: {
+		case GLUT_KEY_UP: {
 			vec3f t = rtGPU->camera.targ;
 			vSub(t, t, rtGPU->camera.orig);
 			t.y = t.y * cos(ROTATE_STEP) + t.z * sin(ROTATE_STEP);
@@ -513,7 +547,7 @@ void specialFuncGPU(int key, int x, int y) {
 			ReInitGPU(0);
 			break;
 		}
-		case GLUT_KEY_LEFT: {
+		case GLUT_KEY_RIGHT: {
 			vec3f t = rtGPU->camera.targ;
 			vSub(t, t, rtGPU->camera.orig);
 			t.x = t.x * cos(-ROTATE_STEP) - t.z * sin(-ROTATE_STEP);
@@ -523,7 +557,7 @@ void specialFuncGPU(int key, int x, int y) {
 			ReInitGPU(0);
 			break;
 		}
-		case GLUT_KEY_RIGHT: {
+		case GLUT_KEY_LEFT: {
 			vec3f t = rtGPU->camera.targ;
 			vSub(t, t, rtGPU->camera.orig);
 			t.x = t.x * cos(ROTATE_STEP) - t.z * sin(ROTATE_STEP);
