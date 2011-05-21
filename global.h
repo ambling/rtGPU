@@ -2,8 +2,19 @@
 
 #ifndef STRUCTS_H
 #define STRUCTS_H
-//#include <stdio.h>
+
+#ifndef GPU_KERNEL
+#include <stdio.h>
 //#include <math.h>
+
+#if defined(__linux__) || defined(__APPLE__)
+#include <sys/time.h>
+#elif defined (WIN32)
+#include <windows.h>
+#else
+        Unsupported Platform !!!
+#endif
+#endif
 
 //global types
 typedef struct
@@ -66,5 +77,19 @@ typedef struct
 #define vCross(v, a, b) vInit(v, (a).y * (b).z - (a).z * (b).y, (a).z * (b).x - (a).x * (b).z, (a).x * (b).y - (a).y * (b).x)
 #define det3v(a, b, c) ((a).x*(b).y*(c).z + (b).x*(c).y*(a).z + (c).x*(a).y*(b).z - (c).x*(b).y*(a).z - (a).x*(c).y*(b).z - (b).x*(a).y*(c).z)
 
+#ifndef GPU_KERNEL
+static double WallClockTime() {
+#if defined(__linux__) || defined(__APPLE__)
+	struct timeval t;
+	gettimeofday(&t, NULL);
+
+	return t.tv_sec + t.tv_usec / 1000000.0;
+#elif defined (WIN32)
+	return GetTickCount() / 1000.0;
+#else
+	Unsupported Platform !!!
+#endif
+#endif
+}
 
 #endif

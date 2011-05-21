@@ -202,6 +202,16 @@ void cpuMain(int width, int height, string sceneFile)
 
 }
 
+double elapseTime;
+
+static void PrintString(void *font, const char *string) {
+	int len, i;
+
+	len = (int)strlen(string);
+	for (i = 0; i < len; i++)
+		glutBitmapCharacter(font, string[i]);
+}
+
 void ReInit(const int reallocBuffers) {
 	// Check if I have to reallocate buffers
 	if (reallocBuffers) {
@@ -211,9 +221,11 @@ void ReInit(const int reallocBuffers) {
 		output = new Color[size];
 	}
 
+	double startTime = WallClockTime();
 	updateCamera();
 
 	rendering();
+	elapseTime = WallClockTime() - startTime;
 }
 
 void idleFunc(void) {
@@ -226,6 +238,14 @@ void displayFunc(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glRasterPos2i(0, 0);
 	glDrawPixels(imWidth, imHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+	//show the fps
+	double fps = 1.0 / elapseTime;
+	char *fpsStr = new char[15];
+	sprintf(fpsStr, "fps: %.4f", fps);
+	glColor3f(1.f, 1.f, 1.f);
+	glRasterPos2i(4, 10);
+	PrintString(GLUT_BITMAP_HELVETICA_18, fpsStr);
 
 	glutSwapBuffers();
 }

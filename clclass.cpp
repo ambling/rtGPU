@@ -434,6 +434,8 @@ void CL::putout()
 	fclose(file);
 }
 
+double elapseTimeGPU;
+
 void ReInitGPU(const int reallocBuffers) {
 	/* no support of resize
 	// Check if I have to reallocate buffers
@@ -445,10 +447,11 @@ void ReInitGPU(const int reallocBuffers) {
 		readScene();
 	}
 	*/
-
+	double startTime = WallClockTime();
 	rtGPU->updateCamera();
 
 	rtGPU->runKernel();
+	elapseTimeGPU = WallClockTime() - startTime;
 }
 
 void idleFuncGPU(void) {
@@ -461,7 +464,16 @@ void displayFuncGPU(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glRasterPos2i(0, 0);
 	glDrawPixels(rtGPU->imWidth, rtGPU->imHeight, GL_RGBA, GL_UNSIGNED_BYTE, rtGPU->pixels);
-
+	
+	//show the fps
+	double fps = 1.0 / elapseTimeGPU;
+	char *fpsStr = new char[15];
+	sprintf(fpsStr, "fps: %.4f", fps);
+	glColor3f(1.f, 1.f, 1.f);
+	glRasterPos2i(4, 10);
+	for (int i = 0; i < (int)strlen(fpsStr); i++)
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, fpsStr[i]);
+	
 	glutSwapBuffers();
 }
 
