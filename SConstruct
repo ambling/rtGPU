@@ -1,4 +1,4 @@
-sources = ['main.cpp', 'clclass.cpp', 'util.cpp', 'global.c', 'rtCPU.cpp']
+sources = ['main.cpp', 'clclass.cpp', 'util.cpp', 'kdtree.c', 'global.c', 'rtCPU.cpp']
 
 env = Environment()
 env.Program(target = 'rtGPU1', source = sources)

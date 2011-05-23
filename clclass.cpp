@@ -4,8 +4,7 @@
 #include <string>
 #include <string.h>
 #include "clclass.h"
-#include "global.h"
-#include "global.c"
+//#include "global.c"
 #include "util.h"
 #include <math.h>
 

@@ -2,23 +2,13 @@
 #define GLOBAL_C
 
 #include "global.h"
+#include "kdtree.h"
+#include "kdtree.c"
 
 #ifndef GPU_KERNEL
 #include <stdio.h>
 #include <math.h>
 #endif
-
-#ifndef GPU_KERNEL
-static float hitSphere(Ray ray, Sphere sphere);
-static float hitMesh(Ray ray, Vertex a, Vertex b, Vertex c);
-static Ray setColor(Ray ray, float t, int obSphere, int obMesh, int sphereNum, 
-	int vertexNum, int materialNum, int meshNum, Sphere* spheres, 
-	Vertex* vertices, Material* materials, Mesh* meshes, Color *color);
-static Ray rayGenerate(Camera camera, int w, int h);
-static void rayCasting(Ray ray, int sphereNum, int vertexNum, 
-	int materialNum, int meshNum, Sphere* spheres, 
-	Vertex* vertices, Material* materials, Mesh* meshes, Color *color);
-#endif	
 
 static float hitSphere(Ray ray, Sphere sphere)
 {
@@ -145,7 +135,7 @@ static float hitMesh(Ray ray, Vertex a, Vertex b, Vertex c)
 	return -1;		//no intersection
 }
 
-static int isShadow(int i, int obSphere, int obMesh, float distance, 
+static int isShadow(KDTreeNode* root, int i, int obSphere, int obMesh, float distance, 
 	int sphereNum, int vertexNum, int meshNum, vec3f pos, vec3f light, 
 #ifdef GPU_KERNEL
 __global
@@ -179,7 +169,7 @@ __global
 			return isshadow;
 		}
 	}
-	///*
+	/*replaced by kdtree
 	for(j = 0; j < meshNum; j++)
 	{//check if is shadow by mesh
 		if(j == obMesh) continue;
@@ -193,6 +183,14 @@ __global
 		}
 	}
 	//*/
+	int minMesh = -1;
+	float dis = searchTree(root, lt, &minMesh, vertexNum, meshNum, vertices, meshes); 
+	if(dis > EPSILON && dis < distance)
+	{//is shadow
+		isshadow = 1;
+		return isshadow;
+	}
+	
 	//if(isshadow == 1) continue;	
 	return isshadow;
 }
@@ -204,7 +202,7 @@ intensity = diffuse * (L.N) + specular * (V.R)n
 reflected in the surface) 
 */
 
-static Ray setColor(Ray ray, float t, int obSphere, int obMesh, 
+static Ray setColor(KDTreeNode* root, Ray ray, float t, int obSphere, int obMesh, 
 	int sphereNum, int vertexNum, int materialNum, int meshNum, 
 #ifdef GPU_KERNEL
 __global
@@ -257,7 +255,7 @@ __global
 				float d = vDot(norm, light);		//d = L x N
 				if(d > EPSILON) continue;
 		
-				if(isShadow(i, obSphere, -1, distance, sphereNum, vertexNum, meshNum, 
+				if(isShadow(root, i, obSphere, -1, distance, sphereNum, vertexNum, meshNum, 
 					pos, light, spheres, vertices, meshes) == 1) continue;
 		
 				vec3f addcolor;
@@ -368,7 +366,8 @@ __global
 				float d = vDot(norm, light);		//d = L x N
 				if(d > 0) continue;
 			
-				if(isShadow(i, -1, obMesh, distance, sphereNum, vertexNum, meshNum, pos, light, spheres, vertices, meshes)) continue;
+				if(isShadow(root, i, -1, obMesh, distance, sphereNum, vertexNum, meshNum, pos, 
+								light, spheres, vertices, meshes)) continue;
 				
 				vec3f addcolor;
 				vMul(addcolor, materials[meshes[obMesh].ma].color, (-1.0 * d));
@@ -481,7 +480,7 @@ __constant
 	return ray;
 }
 
-static void rayCasting(Ray ray, int sphereNum, int vertexNum, 
+static void rayCasting(KDTreeNode* root, Ray ray, int sphereNum, int vertexNum, 
 	int materialNum, int meshNum, 
 #ifdef GPU_KERNEL
 __global
@@ -550,6 +549,7 @@ __global
 		//*/
 	
 		int minMesh = -1;
+		/*replaced by kdtree traversal
 		for(i = 0; i < meshNum; i++)
 		{
 			float hitIndex = hitMesh(ray, vertices[meshes[i].a], 
@@ -577,6 +577,23 @@ __global
 				}			
 			}
 		}
+		//*/
+		float hitIndex = searchTree(root, ray, &minMesh, vertexNum, meshNum, vertices, meshes);
+		if(hitIndex > EPSILON)
+		{
+			if(hitOrNot == 0)
+				minIndex = hitIndex;
+			else
+			{
+				if(hitIndex < minIndex)
+				{
+					minIndex = hitIndex;
+					minSphere = -1;
+				}
+				else
+					minMesh = -1;
+			}		
+		}
 		
 		if((minMesh != -1) || (minSphere != -1))
 		{
@@ -586,7 +603,7 @@ __global
 		
 			//vAssign((*color), sample[minMesh]);
 			Ray oldray = ray;
-			ray = setColor(ray, minIndex, minSphere, minMesh, sphereNum, vertexNum, 
+			ray = setColor(root, ray, minIndex, minSphere, minMesh, sphereNum, vertexNum, 
 							materialNum, meshNum, spheres, vertices, 
 							materials, meshes, &addColor);
 			vAdd((*color), addColor, (*color));

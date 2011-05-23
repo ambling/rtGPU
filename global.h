@@ -62,6 +62,28 @@ typedef struct
 	int ma;			//the Number of material
 } Mesh;
 
+// for kd-tree
+typedef struct
+{
+	int axis;	//0 for x, 1 for y, 2 for z
+	float value;
+} Plane;
+
+typedef struct KDTreeNodeName
+{
+	struct KDTreeNodeName* parent;
+	struct KDTreeNodeName* leftChild;
+	struct KDTreeNodeName* rightChild;
+	struct KDTreeNodeName* sibling;
+	
+	int isleaf;		//the value is 1 if is the leaf node, otherwise 0
+	int depth;
+	vec3f start, end;	//bounding box
+	Plane* plane;	//information of the plane, NULL if is the leaf node
+	int* meshes;	//record the index of meshes that in this box
+	//int meshCnt;	//number of meshes
+} KDTreeNode;
+
 // global functions
 
 #define EPSILON 0.001
@@ -89,7 +111,20 @@ static double WallClockTime() {
 #else
 	Unsupported Platform !!!
 #endif
-#endif
 }
+#endif
+
+
+#ifndef GPU_KERNEL
+static float hitSphere(Ray ray, Sphere sphere);
+static float hitMesh(Ray ray, Vertex a, Vertex b, Vertex c);
+static Ray setColor(KDTreeNode* root, Ray ray, float t, int obSphere, int obMesh, int sphereNum, 
+	int vertexNum, int materialNum, int meshNum, Sphere* spheres, 
+	Vertex* vertices, Material* materials, Mesh* meshes, Color *color);
+static Ray rayGenerate(Camera camera, int w, int h);
+static void rayCasting(KDTreeNode* root, Ray ray, int sphereNum, int vertexNum, 
+	int materialNum, int meshNum, Sphere* spheres, 
+	Vertex* vertices, Material* materials, Mesh* meshes, Color *color);
+#endif	
 
 #endif

@@ -5,6 +5,7 @@
 
 #include "global.h"
 #include "global.c"
+#include "kdtree.c"
 
 using namespace std;
 

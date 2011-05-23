@@ -16,6 +16,7 @@ Mesh* meshes;
 Material* materials;
 Color* output;
 unsigned int *pixels;
+KDTreeNode root;
 
 void readScene(string sceneFile)
 {//get information from scene file
@@ -170,7 +171,7 @@ void rendering()
 		Color color;
 		
 		Ray ray= rayGenerate(camera, w, h);
-		rayCasting(ray, sphereNum, vertexNum, 
+		rayCasting(&root, ray, sphereNum, vertexNum, 
 					materialNum, meshNum, spheres, vertices, 
 					materials, meshes, output+index);
 		pixels[index] = (int)(255*output[index].x) |
@@ -196,6 +197,7 @@ void cpuMain(int width, int height, string sceneFile)
 		printf("%d: %d %d %d\n", i, meshes[i].a, meshes[i].b, meshes[i].c);
 	}
 	*/
+	root = buildKDTree(vertexNum, meshNum, vertices, meshes);
 	
 	output = new Color[size];
 	rendering();
